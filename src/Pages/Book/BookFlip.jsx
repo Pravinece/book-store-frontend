@@ -1,33 +1,24 @@
 
 import { useRef } from "react";
 import HTMLFlipBook from "react-pageflip";
-import "./BookFlip.css";
+import styles from "./BookFlip.module.css";
 
-const books = [
-  {
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
-    category: "Classic Fiction",
-    color: "#294C3B",
-    spineColor: "#1D362A",
-    textColor: "#FFF4D8",
-    accentColor: "#E9D7A5",
-  },
-  {
-    title: "Clean Code",
-    author: "Robert C. Martin",
-    category: "Programming",
-    color: "#233B65",
-    spineColor: "#172744",
-    textColor: "#FFFFFF",
-    accentColor: "#7FD9E8",
-  },
-];
-
+function BookImage({ book }) {
+  return (
+    <div className="h-full w-full bg-white border-1 cursor-pointer">
+      <div className="w-full h-[80%] flex justify-center items-center">
+        <img className="w-full h-full object-cover" src={book.image} alt={book.name} />
+      </div>
+      <div className="flex justify-start items-center px-2">
+        <p className="text-[15px] text-wrap text-gray-500">{book.name}</p>
+      </div>
+    </div>
+  );
+}
 function BookCover({ book }) {
   return (
     <div
-      className="book-cover"
+      className={styles.bookCover}
       style={{
         "--cover-color": book.color,
         "--spine-color": book.spineColor,
@@ -35,21 +26,20 @@ function BookCover({ book }) {
         "--accent-color": book.accentColor,
       }}
     >
-      <div className="book-cover__spine" />
-
-      <div className="book-cover__content">
-        <p className="book-cover__category">{book.category}</p>
+      <div className={styles.bookCoverSpine} />
+      <div className={styles.bookCoverContent}>
+        <p className={styles.bookCoverCategory}>{book.name}</p>
         <div>
-          <h2>{book.title}</h2>
-          <p>{book.author}</p>
+          <h2>{book.name}</h2>
+          <p>{book.description}</p>
         </div>
-        <span className="book-cover__ornament">✦</span>
+        <span className={styles.bookCoverOrnament}>✦</span>
       </div>
     </div>
   );
 }
 
-export default function BookFlip() {
+export default function BookFlip({ category }) {
   const bookRef = useRef(null);
 
   const nextPage = () => {
@@ -61,13 +51,8 @@ export default function BookFlip() {
   };
 
   return (
-    <main className="library">
-      <h1>My Book Catalogue</h1>
-      <p className="library-subtitle">
-        Turn the pages to discover your next book.
-      </p>
-
-      <div className="book-container">
+    <main className={styles.library}>
+      <div className={styles.bookContainer}>
         <HTMLFlipBook
           ref={bookRef}
           width={320}
@@ -85,61 +70,47 @@ export default function BookFlip() {
           className="flip-book"
         >
           {/* Front cover */}
-          <div className="page" data-density="hard">
-            <BookCover
-              book={{
-                title: "The Library",
-                author: "A Collection of Ideas",
-                category: "Welcome",
-                color: "#493323",
-                spineColor: "#2E2017",
-                textColor: "#FFF4D8",
-                accentColor: "#D9B77C",
-              }}
-            />
+          <div className={styles.page} data-density="hard">
+            <BookImage book={category} />
           </div>
 
-          {/* Index page */}
-          <div className="page">
-            <p className="page-label">CONTENTS</p>
-            <h2>Explore the Library</h2>
-            <ul className="index-list">
-              <li>Fiction</li>
-              <li>Programming & Technology</li>
-              <li>Science</li>
-              <li>Business & Finance</li>
-              <li>History</li>
-            </ul>
-            <span className="page-number">01</span>
+          {/* Inner cover */}
+          <div className={styles.page} data-density="hard">
+            <BookCover book={category} />
           </div>
 
-          {/* Book entries */}
-          <div className="page">
-            <p className="page-label">BOOK INDEX</p>
-            <h2>Featured Books</h2>
-            <ul className="book-list">
-              {books.map((book) => (
-                <li key={book.title}>
-                  <strong>{book.title}</strong>
-                  <span>{book.author}</span>
-                </li>
-              ))}
-            </ul>
-            <span className="page-number">02</span>
-          </div>
-
-          {/* Individual book covers */}
-          {books.map((book) => (
-            <div className="page" key={book.title} data-density="hard">
-              <BookCover book={book} />
+          {/* book lists - 6 per page */}
+          {Array.from({ length: Math.ceil(category.books.length / 6) }, (_, pageIdx) => (
+            <div className={styles.page} key={pageIdx}>
+              <p className={styles.pageLabel}>List of Books</p>
+              <h5 className={styles.pageHeading}>Explore the Library</h5>
+              <table className="w-full border-collapse text-[0.72rem] font-[Georgia,serif]">
+                <thead>
+                  <tr style={{ backgroundColor: category.color, color: category.textColor }}>
+                    <th className="py-[6px] text-[11px] px-2 text-center w-6 font-semibold tracking-wide">#</th>
+                    <th className="py-[6px] text-[11px] px-2 text-left font-semibold tracking-wide">Title</th>
+                    <th className="py-[6px] text-[11px] px-2 text-left font-semibold tracking-wide">Author</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {category.books.slice(pageIdx * 6, pageIdx * 6 + 6).map((book, i) => (
+                    <tr key={book.id} style={{ backgroundColor: (pageIdx * 6 + i) % 2 === 1 ? `${category.color}18` : 'transparent' }}>
+                      <td className="py-[6px] px-2 text-center text-[0.65rem]" style={{ color: category.color }}>{pageIdx * 6 + i + 1}</td>
+                      <td className="py-[6px] px-2 border-b border-dotted border-gray-300 align-top text-[11px] text-black">{book.title}</td>
+                      <td className="py-[6px] px-2 border-b border-dotted border-gray-300 align-top text-[10px] text-gray-400">{book.author}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <span className={styles.pageNumber}>{String(pageIdx + 1).padStart(2, "0")}</span>
             </div>
           ))}
 
           {/* Back cover */}
-          <div className="page" data-density="hard">
+          <div className={styles.page} data-density="hard">
             <BookCover
               book={{
-                title: "Keep Exploring",
+                name: "Keep Exploring",
                 author: "Your next chapter awaits",
                 category: "The End",
                 color: "#493323",
@@ -150,11 +121,6 @@ export default function BookFlip() {
             />
           </div>
         </HTMLFlipBook>
-      </div>
-
-      <div className="book-controls">
-        <button onClick={previousPage}>← Previous</button>
-        <button onClick={nextPage}>Next →</button>
       </div>
     </main>
   );

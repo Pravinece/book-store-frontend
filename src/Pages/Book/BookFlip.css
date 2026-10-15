@@ -1,23 +1,13 @@
 
 .library {
-    min-height: 100vh;
-    padding: 36px 16px;
+    min-height: 100%;
+    padding: 16px 8px;
     text-align: center;
-    color: #34291f;
+    color: #413f3e31;
     background: #e9e0d2;
     overflow: hidden;
   }
-  
-  .library h1 {
-    margin-bottom: 8px;
-    font-family: Georgia, serif;
-  }
-  
-  .library-subtitle {
-    margin-bottom: 32px;
-    color: #746655;
-  }
-  
+    
   .book-container {
     display: flex;
     justify-content: center;
@@ -50,6 +40,57 @@
   .index-list {
     padding-left: 20px;
     line-height: 2.4;
+  }
+
+  .page-heading {
+    font-size: 0.85rem;
+    color: #4b3628;
+    margin: 4px 0 10px;
+    font-family: Georgia, serif;
+  }
+
+  .book-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+    font-family: Georgia, serif;
+  }
+
+  .book-table thead tr {
+    background: #4b3628;
+    color: #fff8eb;
+  }
+
+  .book-table th {
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .book-table th:first-child {
+    width: 24px;
+    text-align: center;
+  }
+
+  .book-table td {
+    padding: 6px 8px;
+    border-bottom: 1px dotted #d8c6a9;
+    color: #34291f;
+    vertical-align: top;
+  }
+
+  .book-table td:first-child {
+    text-align: center;
+    color: #92754f;
+  }
+
+  .book-table tbody tr:nth-child(even) {
+    background: #f5ede0;
+  }
+
+  .book-table tbody tr:hover {
+    background: #ede0cc;
   }
   
   .book-list {
@@ -107,7 +148,18 @@
     height: 100%;
     text-align: center;
   }
-  
+
+  .index-list li {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.6;
+}
+
+.book-author {
+  font-size: 12px;
+  color: #888;
+}
+
   .book-cover__category {
     color: var(--accent-color);
     font-size: 0.7rem;
