@@ -7,7 +7,7 @@ const LoginPage = lazy(() => import("../../Pages/Login/Login"));
 const HeroPage = lazy(() => import("../../Pages/Hero/Hero"));
 const HomePage = lazy(() => import("../../Pages/Home/Home"));
 const BookPage = lazy(() => import("../../Pages/Book/Book"))
-const BookFlipPage = lazy(() => import("../../Pages/Book/BookFlip"))
+const DashboardPage = lazy(() => import("../../Pages/Dashboard/Dashboard"))
 
 function S(Component) {
   return (
@@ -46,8 +46,12 @@ const router = createBrowserRouter(
           element: <AuthGuard>{S(BookPage)}</AuthGuard>,
         },
         {
-          path: "bookflip",
-          element: <AuthGuard>{S(BookFlipPage)}</AuthGuard>,
+          path: "dashboard",
+          element: <AuthGuard>{S(DashboardPage)}</AuthGuard>,
+        },
+        {
+          path: "about",
+          element: <AuthGuard>{S(DashboardPage)}</AuthGuard>,
         },
         { path: "403", element: <Navigate to="/" replace /> },
       ],

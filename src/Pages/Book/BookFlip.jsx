@@ -2,8 +2,13 @@
 import { useRef } from "react";
 import HTMLFlipBook from "react-pageflip";
 import styles from "./BookFlip.module.css";
+import SearchBox from "../../components/SearchBox";
+import { useNavigate } from "react-router-dom";
+
+const isLap = window.innerWidth > 480 ? true : false
 
 function BookImage({ book }) {
+
   return (
     <div className="h-full w-full bg-white border-1 cursor-pointer">
       <div className="w-full h-[80%] flex justify-center items-center">
@@ -41,6 +46,7 @@ function BookCover({ book }) {
 
 export default function BookFlip({ category }) {
   const bookRef = useRef(null);
+  let navigate = useNavigate();
 
   const nextPage = () => {
     bookRef.current?.pageFlip().flipNext();
@@ -50,9 +56,33 @@ export default function BookFlip({ category }) {
     bookRef.current?.pageFlip().flipPrev();
   };
 
+  const interactiveElements = document.querySelectorAll('tr');
+
+  interactiveElements.forEach(element => {
+      element.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          // Get the clicked row element
+          const row = e.currentTarget;
+          const bookId = row.getAttribute('data-book-id');
+          
+          // Find the corresponding book object from your data array
+          const clickedBook = category.books.find(b => b.id === bookId);
+          
+          if (clickedBook) {
+              navigate(`/bookflip`, { state: clickedBook });              
+          }
+      });
+  });
+
+
   return (
     <main className={styles.library}>
       <div className={styles.bookContainer}>
+        <div className="w-full flex justify-around items-center mb-2">
+          <p className="text-black">Search By book Name :</p>
+          <SearchBox />
+        </div>
         <HTMLFlipBook
           ref={bookRef}
           width={320}
@@ -63,8 +93,8 @@ export default function BookFlip({ category }) {
           minHeight={400}
           maxHeight={800}
           maxShadowOpacity={0.45}
-          showCover={true}
-          usePortrait={true}
+          showCover={ true}
+          usePortrait={isLap ? false : true}
           mobileScrollSupport={false}
           flippingTime={900}
           className="flip-book"
@@ -94,7 +124,7 @@ export default function BookFlip({ category }) {
                 </thead>
                 <tbody>
                   {category.books.slice(pageIdx * 6, pageIdx * 6 + 6).map((book, i) => (
-                    <tr key={book.id} style={{ backgroundColor: (pageIdx * 6 + i) % 2 === 1 ? `${category.color}18` : 'transparent' }}>
+                    <tr key={book.id} className="cursor-pointer" data-book-id={book.id} style={{ backgroundColor: (pageIdx * 6 + i) % 2 === 1 ? `${category.color}18` : 'transparent' }}>
                       <td className="py-[6px] px-2 text-center text-[0.65rem]" style={{ color: category.color }}>{pageIdx * 6 + i + 1}</td>
                       <td className="py-[6px] px-2 border-b border-dotted border-gray-300 align-top text-[11px] text-black">{book.title}</td>
                       <td className="py-[6px] px-2 border-b border-dotted border-gray-300 align-top text-[10px] text-gray-400">{book.author}</td>
@@ -102,7 +132,7 @@ export default function BookFlip({ category }) {
                   ))}
                 </tbody>
               </table>
-              <span className={styles.pageNumber}>{String(pageIdx + 1).padStart(2, "0")}</span>
+              <span className={styles.pageNumber}>{String(pageIdx + 1)}/{String(Math.ceil(category.books.length / 6))}</span>
             </div>
           ))}
 

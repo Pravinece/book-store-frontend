@@ -10,6 +10,7 @@
 
 .bookContainer {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   width: 100%;
 }
@@ -49,6 +50,8 @@
   margin-top: 24px;
   text-align: center;
   color: #8b7b65;
+  font-size: 11px;
+
 }
 
 .bookCover {
@@ -113,3 +116,4 @@
     padding: 24px 18px;
   }
 }
+
