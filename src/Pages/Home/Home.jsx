@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { X } from 'lucide-react'
-import books from '../../Datas/book-catalogue-data.json'
 import BookFlip from '../Book/BookFlip'
+import { getBooks, getCategories } from '../../app/api/adminapi'
 
 const MODAL_W = window.innerWidth < 480 ? 360 : 580
 const MODAL_H = 520
@@ -20,31 +20,53 @@ function getCardTransform(rect) {
 
 function Home() {
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [category, setCategory] = useState([])
   const [isOpen, setIsOpen] = useState(false) // false = at card position, true = centered
   const [fromTransform, setFromTransform] = useState('none')
+  const [loading, setLoading] = useState(false)
 
   const cardRefs = useRef({})
   const closingRef = useRef(false)
 
-  const openModal = useCallback((category, e) => {
+  const loadCategory = () => {
+      setLoading(true);
+      getCategories().then(res => {
+        setLoading(false);
+        if (res.success) setCategory(res.data?.items || res.data?.categories || (Array.isArray(res.data) ? res.data : []));
+        else setError(res.message);
+      });
+  };
+  
+
+  const openModal = useCallback((cat, e) => {
+    getBooks({ categoryId: cat.id, page: 1, limit: 6 })
+      .then((res) => {
+        if (res.success) setSelectedCategory({
+          ...cat,
+          books: res.data.items,
+          pagination: { page: res.data.page, total: res.data.total }
+        })
+      })
+      .catch(err => console.error("Error fetching books:", err));
     const rect = e.currentTarget.getBoundingClientRect()
     closingRef.current = false
     setFromTransform(getCardTransform(rect))
-    setSelectedCategory(category)
     setIsOpen(false)
-
-    // Wait two frames so the modal is painted at the card position first,
-    // then switch to the centered state so the browser animates between them.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => setIsOpen(true))
     })
   }, [])
 
+  const fetchPage = useCallback(async (pageNum, q = '') => {
+    if (!selectedCategory) return null;
+    const res = await getBooks({ categoryId: selectedCategory.id, page: pageNum, limit: 5, q });
+    if (res.success) return res.data.items;
+    return null;
+  }, [selectedCategory])
+
   const closeModal = useCallback(() => {
     if (!selectedCategory || closingRef.current) return
     closingRef.current = true
-
-    // Re-measure the card in case the list was scrolled/resized while open
     const el = cardRefs.current[selectedCategory.id]
     if (el) setFromTransform(getCardTransform(el.getBoundingClientRect()))
     setIsOpen(false)
@@ -60,6 +82,7 @@ function Home() {
 
   // Close on Escape
   useEffect(() => {
+    loadCategory();
     if (!selectedCategory) return
     const onKey = (e) => e.key === 'Escape' && closeModal()
     window.addEventListener('keydown', onKey)
@@ -67,23 +90,23 @@ function Home() {
   }, [selectedCategory, closeModal])
 
   return (
-    <div className="w-[50%] h-[80%] overflow-auto mx-auto">
-      {books.categories.length > 0 ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
-          {books.categories.map((book) => (
+    <div className="max-w-[700px] w-[700px] min-w-[340px] h-[95%] overflow-auto mx-auto animate-slideUp">
+      {category.length > 0 ? (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
+          {category.map((book) => (
             <div
               key={book.id}
               ref={(el) => (cardRefs.current[book.id] = el)}
               onClick={(e) => openModal(book, e)}
               // Hide the original card while the modal "is" that card
               style={{ visibility: selectedCategory?.id === book.id ? 'hidden' : 'visible' }}
-              className="w-[150px] h-[200px] bg-white border-1 border-gray-300 shadow-2xl cursor-pointer"
+              className="w-[150px] h-[200px] place-items-center mx-auto bg-white border-1 border-gray-300 shadow-2xl cursor-pointer"
             >
               <div className="w-full h-[160px]">
-                <img className="w-full h-full object-cover" src={`${book.image}`} alt="" />
+                <img className="w-full h-full object-cover" src={`${book.imageUrl}`} alt="" />
               </div>
               <div className="flex justify-start items-center px-2">
-                <p className="text-[12px] text-wrap text-gray-500">{book.name}</p>
+                <p className="text-[12px] text-wrap text-gray-500">{book.categoryName}</p>
               </div>
             </div>
           ))}
@@ -123,7 +146,7 @@ function Home() {
           >
             <X size={20} />
           </button>
-          <BookFlip category={selectedCategory} />
+          <BookFlip category={selectedCategory} onFetchPage={fetchPage} />
         </div>
       )}
     </div>

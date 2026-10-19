@@ -15,6 +15,12 @@ export default defineConfig(({ mode }) => {
       headers: {
         'X-Frame-Options': 'DENY',
       },
+      proxy: {
+        '/api': {
+          target: env.VITE_API_BASE_URL || 'https://book-store-backend-czfy.onrender.com',
+          changeOrigin: true,
+        },
+      },
     },
   }
 })

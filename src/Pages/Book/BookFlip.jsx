@@ -1,88 +1,70 @@
-
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import HTMLFlipBook from "react-pageflip";
 import styles from "./BookFlip.module.css";
-import SearchBox from "../../components/SearchBox";
 import { useNavigate } from "react-router-dom";
+import BookCover, { BookImage } from "./BookCover";
+import SearchBox from "../../components/SearchBox";
 
-const isLap = window.innerWidth > 480 ? true : false
+const BOOKS_PER_PAGE = 5;
 
-function BookImage({ book }) {
-
-  return (
-    <div className="h-full w-full bg-white border-1 cursor-pointer">
-      <div className="w-full h-[80%] flex justify-center items-center">
-        <img className="w-full h-full object-cover" src={book.image} alt={book.name} />
-      </div>
-      <div className="flex justify-start items-center px-2">
-        <p className="text-[15px] text-wrap text-gray-500">{book.name}</p>
-      </div>
-    </div>
-  );
-}
-function BookCover({ book }) {
-  return (
-    <div
-      className={styles.bookCover}
-      style={{
-        "--cover-color": book.color,
-        "--spine-color": book.spineColor,
-        "--text-color": book.textColor,
-        "--accent-color": book.accentColor,
-      }}
-    >
-      <div className={styles.bookCoverSpine} />
-      <div className={styles.bookCoverContent}>
-        <p className={styles.bookCoverCategory}>{book.name}</p>
-        <div>
-          <h2>{book.name}</h2>
-          <p>{book.description}</p>
-        </div>
-        <span className={styles.bookCoverOrnament}>✦</span>
-      </div>
-    </div>
-  );
-}
-
-export default function BookFlip({ category }) {
+export default function BookFlip({ category, onFetchPage }) {
   const bookRef = useRef(null);
-  let navigate = useNavigate();
+  const navigate = useNavigate();
+  const isLap = window.innerWidth > 480;
 
-  const nextPage = () => {
-    bookRef.current?.pageFlip().flipNext();
+  const colors = category.categoryColors || {};
+  const totalBooks = category.pagination?.total || category.books?.length || 0;
+  const totalPages = Math.ceil(totalBooks / BOOKS_PER_PAGE);
+
+  // Store fetched books per page: { 1: [...], 2: [...] }
+  const [pageBooks, setPageBooks] = useState({ 1: category.books || [] });
+  const [loadingPage, setLoadingPage] = useState(null);
+  const [q, setQ] = useState('');
+
+  const fetchPage = async (pageNum, query = q) => {
+    if (loadingPage === pageNum) return;
+    setLoadingPage(pageNum);
+    const books = await onFetchPage(pageNum, query);
+    setLoadingPage(null);
+    if (books) setPageBooks(prev => ({ ...prev, [pageNum]: books }));
   };
 
-  const previousPage = () => {
-    bookRef.current?.pageFlip().flipPrev();
+  const handleSearch = (val) => {
+    setQ(val);
+    setPageBooks({});
+    fetchPage(1, val);
+    bookRef.current?.pageFlip().flip(2);
   };
 
-  const interactiveElements = document.querySelectorAll('tr');
+  const handleFlip = (e) => {
+    const flipPage = e.data;
+    const bookPageIdx = flipPage - 1;
+    if (bookPageIdx >= 1 && bookPageIdx <= totalPages) {
+      fetchPage(bookPageIdx, q);
+      if (bookPageIdx + 1 <= totalPages) fetchPage(bookPageIdx + 1, q);
+    }
+  };
 
-  interactiveElements.forEach(element => {
-      element.addEventListener('click', (e) => {
-          e.stopPropagation();
-          
-          // Get the clicked row element
-          const row = e.currentTarget;
-          const bookId = row.getAttribute('data-book-id');
-          
-          // Find the corresponding book object from your data array
-          const clickedBook = category.books.find(b => b.id === bookId);
-          
-          if (clickedBook) {
-              navigate(`/bookflip`, { state: clickedBook });              
-          }
-      });
-  });
+  const handleBookClick = (e, book) => {
+    e.stopPropagation();
+    navigate(`/${book.id}`);
+  };
 
+  const coverColors = {
+    color: colors.color || "#294C3B",
+    spineColor: colors.spineColor || "#1D362A",
+    textColor: colors.textColor || "#FFF4D8",
+    accentColor: colors.accentColor || "#E9D7A5",
+  };
 
   return (
     <main className={styles.library}>
       <div className={styles.bookContainer}>
         <div className="w-full flex justify-around items-center mb-2">
-          <p className="text-black">Search By book Name :</p>
-          <SearchBox />
+          <p className="text-black text-sm">Search :</p>
+          <SearchBox placeholder="Search books..." onSearch={handleSearch} />
         </div>
+
         <HTMLFlipBook
           ref={bookRef}
           width={320}
@@ -93,60 +75,86 @@ export default function BookFlip({ category }) {
           minHeight={400}
           maxHeight={800}
           maxShadowOpacity={0.45}
-          showCover={ true}
-          usePortrait={isLap ? false : true}
+          showCover={true}
+          usePortrait={!isLap}
           mobileScrollSupport={false}
           flippingTime={900}
           className="flip-book"
+          onFlip={handleFlip}
         >
           {/* Front cover */}
           <div className={styles.page} data-density="hard">
-            <BookImage book={category} />
+            <BookImage book={{ ...category, image: category.imageUrl, name: category.categoryName }} />
           </div>
 
           {/* Inner cover */}
           <div className={styles.page} data-density="hard">
-            <BookCover book={category} />
+            <BookCover book={{ ...category, name: category.categoryName, ...coverColors }} />
           </div>
 
-          {/* book lists - 6 per page */}
-          {Array.from({ length: Math.ceil(category.books.length / 6) }, (_, pageIdx) => (
-            <div className={styles.page} key={pageIdx}>
-              <p className={styles.pageLabel}>List of Books</p>
-              <h5 className={styles.pageHeading}>Explore the Library</h5>
-              <table className="w-full border-collapse text-[0.72rem] font-[Georgia,serif]">
-                <thead>
-                  <tr style={{ backgroundColor: category.color, color: category.textColor }}>
-                    <th className="py-[6px] text-[11px] px-2 text-center w-6 font-semibold tracking-wide">#</th>
-                    <th className="py-[6px] text-[11px] px-2 text-left font-semibold tracking-wide">Title</th>
-                    <th className="py-[6px] text-[11px] px-2 text-left font-semibold tracking-wide">Author</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {category.books.slice(pageIdx * 6, pageIdx * 6 + 6).map((book, i) => (
-                    <tr key={book.id} className="cursor-pointer" data-book-id={book.id} style={{ backgroundColor: (pageIdx * 6 + i) % 2 === 1 ? `${category.color}18` : 'transparent' }}>
-                      <td className="py-[6px] px-2 text-center text-[0.65rem]" style={{ color: category.color }}>{pageIdx * 6 + i + 1}</td>
-                      <td className="py-[6px] px-2 border-b border-dotted border-gray-300 align-top text-[11px] text-black">{book.title}</td>
-                      <td className="py-[6px] px-2 border-b border-dotted border-gray-300 align-top text-[10px] text-gray-400">{book.author}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <span className={styles.pageNumber}>{String(pageIdx + 1)}/{String(Math.ceil(category.books.length / 6))}</span>
-            </div>
-          ))}
+          {/* Book list pages — one per BOOKS_PER_PAGE */}
+          {Array.from({ length: totalPages }, (_, idx) => {
+            const pageNum = idx + 1;
+            const books = pageBooks[pageNum];
+            return (
+              <div
+                className={styles.page}
+                key={pageNum}
+                onMouseDown={(e) => e.stopPropagation()}
+                onMouseMove={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+              >
+                <p className={styles.pageLabel}>{category.categoryName}</p>
+                <h5 className={styles.pageHeading}>Book List</h5>
+
+                {!books || loadingPage === pageNum ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60%' }}>
+                    <p style={{ color: '#92754f', fontSize: '0.8rem' }}>Loading…</p>
+                  </div>
+                ) : (
+                  <table className="w-full border-collapse text-[0.72rem] font-[Georgia,serif]">
+                    <thead>
+                      <tr style={{ backgroundColor: coverColors.color, color: coverColors.textColor }}>
+                        <th className="py-[6px] text-[11px] px-2 text-center w-6 font-semibold tracking-wide">#</th>
+                        <th className="py-[6px] text-[11px] px-2 text-left font-semibold tracking-wide">Title - autor</th>
+                        {/* <th className="py-[6px] text-[11px] px-2 text-left font-semibold tracking-wide">Author</th> */}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {books.map((book, i) => (
+                        <tr
+                          key={book.id}
+                          className="cursor-pointer"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => handleBookClick(e, book)}
+                          style={{ backgroundColor: i % 2 === 1 ? `${coverColors.color}18` : 'transparent' }}
+                        >
+                          <td className="py-[6px] px-2 text-center text-[0.65rem]" style={{ color: coverColors.color }}>
+                            {(pageNum - 1) * BOOKS_PER_PAGE + i + 1}
+                          </td>
+                          <td className="py-[6px] px-2 border-b border-dotted border-gray-300 align-top text-[11px] text-black">{book.name}
+                            <span className="block text-[0.65rem] truncate w-48 text-nowrap text-gray-500">{book.author}</span>
+                          </td>
+                          {/* <td className="py-[6px] px-2 border-b border-dotted border-gray-300 align-top text-[10px] text-gray-400">{book.author}</td> */}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                <span className={styles.pageNumber}>{pageNum} / {totalPages}</span>
+              </div>
+            );
+          })}
 
           {/* Back cover */}
           <div className={styles.page} data-density="hard">
             <BookCover
               book={{
-                name: "Keep Exploring",
-                author: "Your next chapter awaits",
-                category: "The End",
-                color: "#493323",
-                spineColor: "#2E2017",
-                textColor: "#FFF4D8",
-                accentColor: "#D9B77C",
+                categoryColors : category.categoryColors,
+                categoryName: "Keep Exploring",
+                description: "Your next chapter awaits",
               }}
             />
           </div>

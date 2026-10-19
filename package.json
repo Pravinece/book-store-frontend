@@ -4,18 +4,21 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "axios": "^1.20.0",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^1.57.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-pageflip": "^2.0.3",
     "react-router-dom": "^7.18.4",
+    "recharts": "^3.10.1",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {

@@ -1,16 +1,19 @@
-import { ChartBarDecreasing, Home, LogIn, LogOut, UserCheck2 } from 'lucide-react'
+import { ChartBarDecreasing, Home, LogIn, LogOut, User, UserCheck2 } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 import Button from './Button'
 import { useLocation, useNavigate } from 'react-router-dom';
+import { clearAuth, getSecureUser } from '../utils/cookieAuth';
+import { logOutUser } from '../app/api/authapi';
 
 function TopBar() {
   const env = import.meta.env
   const location = useLocation();
   const navigate = useNavigate();
   let [indicator , setIndicator] = useState(null)
-  console.log('indicator: ', indicator);
   let navRef = useRef(null)
   let itemsRef = useRef([])
+
+  let user = getSecureUser();
 
   const navItems = [
     { id: 1, path: "", icon: Home, label: "Home", visible: true },
@@ -30,48 +33,69 @@ function TopBar() {
     if (!el || !nav) return;
     const navLeft = nav.getBoundingClientRect().left;
     const elRect = el.getBoundingClientRect();
-    console.log('elRect.left: ', elRect.left);
-    setIndicator({ left: elRect.left - navLeft, width: elRect.width });
+    setIndicator({ left: (elRect.left - navLeft -4), width: elRect.width });
     navigate(path)
   }
 
   useEffect(() => {
-    if (itemsRef.current[0] && navRef.current) {
-      const elRect = itemsRef.current[0].getBoundingClientRect();
-      const navLeft = navRef.current.getBoundingClientRect().left;
-      setIndicator({ left: elRect.left - navLeft, width: elRect.width });
+    const activeIndex = navItems.findIndex((item) => isActive(item));
+    const idx = activeIndex === -1 ? 0 : activeIndex;
+    const el = itemsRef.current[idx];
+    const nav = navRef.current;
+    if (!el || !nav) return;
+    const navLeft = nav.getBoundingClientRect().left;
+    const elRect = el.getBoundingClientRect();
+    setIndicator({ left: (elRect.left - navLeft - 4), width: elRect.width });
+  }, [location.pathname]);
+
+  const handleLogout = async () => {
+    const res = await logOutUser();
+    if (res.success) {
+      clearAuth();
+    } else {
+      console.error('Logout failed:', res.message);
     }
-  }, []);
+  }
 
   return (
-    <div className='w-full h-[70px]'>
-      <div className='w-[90%] h-full mx-auto flex justify-between items-center m-2 px-5 rounded-4xl border-2 border-neutral-100 bg-white shadow-2xl'>
+    <div className='w-full h-[70px] z-100'>
+      <div className='w-[90%] h-full mx-auto flex justify-between items-center mt-1 px-5 rounded-4xl border-2 border-neutral-100 bg-white shadow-2xl'>
         <div className='w-[100px] h-full p-1'>
-          <img src={`${env.VITE_APP_URL}/brandLogo.png`} className='w-full h-full object-contain' alt="" />
+          <img src={`/${env.VITE_APP_URL}/brandLogo.png`} className='w-full h-full object-cover' alt="" />
         </div>
 
 
-        <div className='relative flex justify-center items-center gap-3 px-1 h-[55px] rounded-4xl border-4 border-neutral-200 bg-white shadow-2xl' ref={navRef}>
-        {indicator && <div style={indicator} className="absolute z-1 w-20 left-0 h-8 rounded-4xl bg-blue-100 transition-all duration-300 ease-in-out"></div>}
+        <div className='relative flex justify-center items-center gap-3 px-2 h-[55px] rounded-4xl border-4 border-neutral-200 bg-white shadow-2xl' ref={navRef}>
+        {indicator && <div style={indicator} className="absolute z-1 w-7 sm:w-20 left-0 h-8 clay-box-shadow transition-all duration-300 ease-in-out"></div>}
           {navItems.map((tab) => {
             const active = isActive(tab)
             return(
             <button key={tab.id}
               onClick={() => handleNavigation(tab.path, navItems.indexOf(tab))}
               ref={(el) => (itemsRef.current[navItems.indexOf(tab)] = el)} 
-              className='cursor-pointer text-[14px] w-20 h-8 text-neutral-500 border rounded-4xl  hover:text-blue-400'>
-              {tab.label}
+              className='cursor-pointer outline-none z-10 text-[14px] w-7 sm:w-20 h-8 flex justify-center items-center text-secondary rounded-4xl hover:text-secondary'>
+              <span className='hidden sm:inline'>{tab.label}</span>
+              <span className='sm:hidden'><tab.icon size={15} /></span>
             </button>)}
           )}
         </div>
 
 
-        <Button className='w-[100px] h-[40px] rounded-4xl border-2 border-neutral-200 bg-white text-blue-400 text-[14px]'>
-          <span className='flex justify-center items-center gap-2 cursor-pointer '>
-            <LogIn className='w-4' />
-            Login
-          </span>
-        </Button>
+          {user ? (
+            <Button onClick={() => {handleLogout()}} className='w-[40px] sm:w-[100px] h-[40px] rounded-4xl border-2 border-neutral-200 bg-secondary text-accent text-[14px]'>
+              <span className='flex justify-center items-center gap-2 cursor-pointer'>
+                <User className='w-4' />
+                <span className='hidden sm:inline'>Logout</span>
+              </span>
+            </Button>
+          ) : (
+            <Button onClick={() => navigate('login')} className='w-[40px] sm:w-[100px] h-[40px] rounded-4xl border-2 border-neutral-200 bg-secondary text-accent text-[14px]'>
+              <span className='flex justify-center items-center gap-2 cursor-pointer'>
+                <LogIn className='w-4' />
+                <span className='hidden sm:inline'>Login</span>
+              </span>
+            </Button>
+          )}
       </div>
         
     </div>

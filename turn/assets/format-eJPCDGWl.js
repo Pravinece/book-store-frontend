@@ -1,0 +1,1 @@
+var e=new Intl.NumberFormat(`en-IN`,{maximumFractionDigits:0}),t=t=>Number(t)===0?`Free`:`₹${e.format(Number(t)||0)}`;export{t};
