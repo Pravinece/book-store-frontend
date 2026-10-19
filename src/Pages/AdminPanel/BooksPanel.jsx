@@ -171,7 +171,7 @@ function BulkModal({ onClose, onDone }) {
 
   const downloadTemplate = () => {
   try {
-    let url = `/${import.meta.env.VITE_APP_URL}/sample_books.csv`
+    let url = `./sample_books.csv`
     const a = document.createElement("a");
     a.href = url;
     a.download = "books_sample_template.csv";

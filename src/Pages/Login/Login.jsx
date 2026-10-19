@@ -79,7 +79,7 @@ function FrontCover() {
         <p className={styles.bookCoverCategory}>Member Access</p>
         <div className="flex flex-col items-center gap-4">
           <img
-            src={`/${env.VITE_APP_URL}/brandLogo.png`}
+            src={`./brandLogo.png`}
             alt="Brand Logo"
             className="w-28 h-28 object-contain rounded-full opacity-90"
           />

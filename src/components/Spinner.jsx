@@ -15,7 +15,7 @@ export default function Spinner() {
             style={{ backfaceVisibility: "hidden" }}
           >
             <img
-              src={`/${appUrl}/brandLogo.png`}
+              src={`./brandLogo.png`}
               alt=""
               className="w-full h-full object-cover"
             />
