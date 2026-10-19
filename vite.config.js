@@ -5,11 +5,15 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const configuredAppPath = process.env.VITE_APP_URL ?? env.VITE_APP_URL;
+  const appPath = configuredAppPath?.trim().replace(/^\/+|\/+$/g, '');
+  const base = appPath ? `/${appPath}/` : '/';
+
   return {
     plugins: [react(), tailwindcss()],
-    base: `/${env.VITE_APP_URL}/`,
+    base,
     build: {
-      outDir: env.VITE_APP_URL,
+      outDir: appPath || 'dist',
     },
     server: {
       headers: {
