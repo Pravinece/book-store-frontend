@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, X, Check, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check, Loader2, Upload } from "lucide-react";
 import { getCategories, createCategory, updateCategory, deleteCategory, uploadImage } from "../../app/api/adminapi";
 import toast from "../../components/Toast";
 
@@ -32,7 +32,7 @@ function CategoryForm({ initial = EMPTY, onSave, onCancel, loading }) {
     setImgLoading(true);
     const res = await uploadImage("categories", file);
     setImgLoading(false);
-    if (res.success) {toast.success("Uploaded Successfully."),set("imageUrl", `${import.meta.env.VITE_API_BASE_URL}${res.imageUrl}`)}
+    if (res.success) {toast.success("Uploaded Successfully."),set("imageUrl", `${import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL : 'https://book-store-backend-czfy.onrender.com'}${res.imageUrl}`)}
     else {toast.error(res.message);}
   };
 
@@ -75,14 +75,32 @@ function CategoryForm({ initial = EMPTY, onSave, onCancel, loading }) {
         ))}
       </div> */}
 
-      <div className="flex flex-col gap-1">
+      {/* <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cover Image</label>
         {form.imageUrl && <img src={form.imageUrl} alt="preview" className="w-full h-32 object-cover rounded-lg mb-2" />}
         <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-lg px-3 py-2 cursor-pointer hover:border-[#294C3B] transition text-sm text-gray-500">
           {imgLoading ? <Loader2 size={14} className="animate-spin" /> : "Upload image"}
           <input type="file" accept="image/*" className="hidden" onChange={handleImage} />
         </label>
+      </div> */}
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cover Image</label>
+        {form.imageUrl && <img src={form.imageUrl} alt="preview" className="w-24 h-36 object-cover rounded-lg mb-2" />}
+        <div className="flex flex-col gap-2">
+          <input
+            type="text"
+            value={form.imageUrl}
+            onChange={e => set("imageUrl", e.target.value)}
+            placeholder="Paste image URL (e.g. https://...)"
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#294C3B] transition"
+          />
+          <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-lg px-3 py-2 cursor-pointer hover:border-[#294C3B] transition text-sm text-gray-500">
+            {imgLoading ? <Loader2 size={14} className="animate-spin" /> : <><Upload size={13} /> Or upload a file</>}
+            <input type="file" accept="image/*" className="hidden" onChange={handleImage} />
+          </label>
+        </div>
       </div>
+
 
       <div className="flex justify-end gap-2 pt-2">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm text-gray-600 border border-gray-200 hover:bg-gray-50 cursor-pointer">Cancel</button>

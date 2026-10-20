@@ -6,7 +6,7 @@ function BookImage({ book }) {
   return (
     <div className="h-full w-full bg-white border-1 cursor-pointer">
       <div className="w-full h-[80%] flex justify-center items-center">
-        <img className="w-full h-full object-cover" src={book.imageUrl} alt={book.categoryName} />
+        <img className="w-full h-full object-cover" src={book.imageUrl} onError={(e)=>e.target.src = `./brandLogo.png`} alt={book.categoryName} />
       </div>
       <div className="flex justify-center items-center px-2">
         <p className="text-[15px] text-wrap text-gray-500">{book.categoryName}</p>

@@ -4,7 +4,7 @@ import BookFlip from '../Book/BookFlip'
 import { getBooks, getCategories } from '../../app/api/adminapi'
 
 const MODAL_W = window.innerWidth < 480 ? 360 : 580
-const MODAL_H = 520
+const MODAL_H = window.innerWidth < 480 ? 610 : 520
 const DURATION = 550
 const EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
@@ -103,7 +103,7 @@ function Home() {
               className="w-[150px] h-[200px] place-items-center mx-auto bg-white border-1 border-gray-300 shadow-2xl cursor-pointer"
             >
               <div className="w-full h-[160px]">
-                <img className="w-full h-full object-cover" src={`${book.imageUrl}`} alt="" />
+                <img className="w-full h-full object-cover" src={`${book.imageUrl}`} onError={(e)=>e.target.src = `./brandLogo.png`} alt="" />
               </div>
               <div className="flex justify-start items-center px-2">
                 <p className="text-[12px] text-wrap text-gray-500">{book.categoryName}</p>
@@ -128,9 +128,7 @@ function Home() {
           onTransitionEnd={handleTransitionEnd}
           style={{
             width: MODAL_W,
-            height: 'fit-content',
-            minHeight: MODAL_H,
-            maxHeight: 'fit-content',
+            height: MODAL_H,
             top: '50%',
             left: '50%',
             marginLeft: -MODAL_W / 2,
