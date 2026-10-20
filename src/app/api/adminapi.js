@@ -37,9 +37,9 @@ export async function createCategory(body) {
 }
 
 export async function updateCategory(id, body) {
-  const { name, description, color, spineColor, textColor, accentColor, image } = body;
+  const { name, description, color, spineColor, textColor, accentColor, imageUrl } = body;
   try {
-    const res = await instance.put(`${BASE}/categories/${id}`, { name, description, color, spineColor, textColor, accentColor, image });
+    const res = await instance.put(`${BASE}/categories/${id}`, { name, description, color, spineColor, textColor, accentColor, imageUrl });
     return { success: true, data: res.data };
   } catch (err) {
     return { success: false, message: err?.response?.data?.message || err.message };
@@ -61,7 +61,7 @@ export async function getBooks(params = {}) {
     const cleanParams = Object.fromEntries(
       Object.entries(params).filter(([_, v]) => v !== "" && v !== null && v !== undefined)
     );
-    const res = await instance.get(`${BASE}/books/`, { params: cleanParams });
+    const res = await instance.get(`${BASE}/books`, { params: cleanParams });
     return { success: true, data: res.data };
   } catch (err) {
     return { success: false, message: err?.response?.data?.message || err.message };

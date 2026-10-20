@@ -128,7 +128,9 @@ function Home() {
           onTransitionEnd={handleTransitionEnd}
           style={{
             width: MODAL_W,
-            height: MODAL_H,
+            height: 'fit-content',
+            minHeight: MODAL_H,
+            maxHeight: 'fit-content',
             top: '50%',
             left: '50%',
             marginLeft: -MODAL_W / 2,

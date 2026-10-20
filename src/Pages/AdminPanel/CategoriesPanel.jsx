@@ -21,6 +21,7 @@ function Modal({ title, onClose, children }) {
 
 function CategoryForm({ initial = EMPTY, onSave, onCancel, loading }) {
   const [form, setForm] = useState(initial);
+  console.log('form: ', form);
   const [imgLoading, setImgLoading] = useState(false);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -100,6 +101,7 @@ function CategoryForm({ initial = EMPTY, onSave, onCancel, loading }) {
 
 export default function CategoriesPanel() {
   const [categories, setCategories] = useState([]);
+  console.log('categories: ', categories);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -123,7 +125,7 @@ export default function CategoriesPanel() {
     ? await createCategory(form)
     : await updateCategory(modal.data.id, form);
     setSaving(false);
-    if (res.success) { toast.success("SUccessfully Done."),setModal(null); load(); }
+    if (res.success) { toast.success("Successfully Done."),setModal(null); load(); }
     else setError(res.message),toast.error(res.message);
   };
 
