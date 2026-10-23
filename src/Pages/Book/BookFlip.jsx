@@ -4,29 +4,35 @@ import styles from "./BookFlip.module.css";
 import { useNavigate } from "react-router-dom";
 import BookCover, { BookImage } from "./BookCover";
 import SearchBox from "../../components/SearchBox";
+import { getBooks } from "../../app/api/adminapi";
 
-const BOOKS_PER_PAGE = 5;
+const limit = 5;
 
-export default function BookFlip({ category, onFetchPage }) {
+export default function BookFlip({ category}) {
+  console.log('category: ', category);
   const bookRef = useRef(null);
   const navigate = useNavigate();
   const isLap = window.innerWidth > 480;
 
   const colors = category.categoryColors || {};
-  const totalBooks = category.pagination?.total || category.books?.length || 0;
-  const totalPages = Math.ceil(totalBooks / BOOKS_PER_PAGE);
+  const [totalPages, setTotalPages] = useState(0)
+  console.log('totalPages: ', totalPages);
 
   // Store fetched books per page: { 1: [...], 2: [...] }
-  const [pageBooks, setPageBooks] = useState({ 1: category.books || [] });
+  const [pageBooks, setPageBooks] = useState({});
+  console.log('pageBooks: ', pageBooks);
   const [loadingPage, setLoadingPage] = useState(null);
   const [q, setQ] = useState('');
 
-  const fetchPage = async (pageNum, query = q) => {
-    if (loadingPage === pageNum) return;
-    setLoadingPage(pageNum);
-    const books = await onFetchPage(pageNum, query);
+  const fetchPage = async (page, q) => {
+    if (pageBooks[page]) return;
+    if (loadingPage === page) return;
+    setLoadingPage(page);
+    const books = await getBooks({categoryId: category.id, page, q, limit});
     setLoadingPage(null);
-    if (books) setPageBooks(prev => ({ ...prev, [pageNum]: books }));
+    if (books.data) {
+      setPageBooks(prev => ({ ...prev, [page]: books.data.items })),setTotalPages(Math.ceil(books.data.total / limit));
+    }
   };
 
   const handleSearch = (val) => {
@@ -44,6 +50,13 @@ export default function BookFlip({ category, onFetchPage }) {
       if (bookPageIdx + 1 <= totalPages) fetchPage(bookPageIdx + 1, q);
     }
   };
+
+  useEffect(()=>{
+    if(category.id){
+      fetchPage(1,"")
+    }
+
+  },[category.id])
 
   const handleBookClick = (e, book) => {
     e.stopPropagation();
@@ -65,7 +78,7 @@ export default function BookFlip({ category, onFetchPage }) {
           <SearchBox placeholder="Search books..." onSearch={handleSearch} />
         </div>
 
-        <HTMLFlipBook
+        {totalPages && <HTMLFlipBook
           ref={bookRef}
           width={320}
           height={480}
@@ -93,9 +106,11 @@ export default function BookFlip({ category, onFetchPage }) {
           </div>
 
           {/* Book list pages — one per BOOKS_PER_PAGE */}
-          {Array.from({ length: totalPages }, (_, idx) => {
+          {totalPages && Array.from({ length: totalPages }, (_, idx) => {
             const pageNum = idx + 1;
             const books = pageBooks[pageNum];
+            console.log('books: ', books);
+            console.log('pageBooks: ', pageBooks);
             return (
               <div
                 className={styles.page}
@@ -131,7 +146,7 @@ export default function BookFlip({ category, onFetchPage }) {
                           style={{ backgroundColor: i % 2 === 1 ? `${coverColors.color}18` : 'transparent' }}
                         >
                           <td className="py-[6px] px-2 text-center text-[0.65rem]" style={{ color: coverColors.color }}>
-                            {(pageNum - 1) * BOOKS_PER_PAGE + i + 1}
+                            {(pageNum - 1) * limit + i + 1}
                           </td>
                           <td className="py-[6px] px-2 border-b border-dotted border-gray-300 align-top text-[11px] text-black">{book.name}
                             <span className="block text-[0.65rem] truncate w-48 text-nowrap text-gray-500">{book.author}</span>
@@ -158,7 +173,7 @@ export default function BookFlip({ category, onFetchPage }) {
               }}
             />
           </div>
-        </HTMLFlipBook>
+        </HTMLFlipBook>}
       </div>
     </main>
   );

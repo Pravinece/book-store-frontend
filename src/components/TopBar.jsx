@@ -61,7 +61,7 @@ function TopBar() {
     <div className='w-full h-[70px] z-100'>
       <div className='w-[90%] h-full mx-auto flex justify-between items-center mt-1 px-5 rounded-4xl border-2 border-neutral-100 bg-white shadow-2xl'>
         <div className='w-[100px] h-full p-1'>
-          <img src={`./brandLogo.png`} className='w-full h-full object-cover' alt="" />
+          <img src={`./brandLogo.png`} className='w-full h-full object-contain' alt="" />
         </div>
 
 

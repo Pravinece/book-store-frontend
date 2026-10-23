@@ -6,7 +6,7 @@ export const STORE = {
   phone: '+91 98765 43210',
   phoneHref: 'tel:+919876543210',
   // WhatsApp number in international format, digits only (no + or spaces)
-  whatsapp: '918903151467',
+  whatsapp: '911234567890',
   email: 'hello@wordsandworths.example',
   instagramHandle: 'words_n_worths',
   instagramUrl: 'https://www.instagram.com/words_n_worths/',

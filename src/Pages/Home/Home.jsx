@@ -1,7 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { X } from 'lucide-react'
 import BookFlip from '../Book/BookFlip'
-import { getBooks, getCategories } from '../../app/api/adminapi'
+import CategoryLoader from '../../components/CategoryLoader'
+import { getCategories } from '../../app/api/adminapi'
 
 const MODAL_W = window.innerWidth < 480 ? 360 : 580
 const MODAL_H = window.innerWidth < 480 ? 610 : 520
@@ -24,45 +25,42 @@ function Home() {
   const [isOpen, setIsOpen] = useState(false) // false = at card position, true = centered
   const [fromTransform, setFromTransform] = useState('none')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const cardRefs = useRef({})
   const closingRef = useRef(false)
+  const loadedRef = useRef(false) // tracks if initial fetch has completed
 
   const loadCategory = () => {
+      if (loadedRef.current) return; // prevent double-fetch
       setLoading(true);
-      getCategories().then(res => {
+      setError('');
+      getCategories()
+      .then(res => {
         setLoading(false);
+        loadedRef.current = true;
         if (res.success) setCategory(res.data?.items || res.data?.categories || (Array.isArray(res.data) ? res.data : []));
-        else setError(res.message);
-      });
+        else setError(res.message || 'Failed to load categories');
+      })
+      .catch((err)=>{
+        setLoading(false);
+        setError('Network error — check your connection');
+        loadedRef.current = true;
+      })
   };
   
 
   const openModal = useCallback((cat, e) => {
-    getBooks({ categoryId: cat.id, page: 1, limit: 6 })
-      .then((res) => {
-        if (res.success) setSelectedCategory({
-          ...cat,
-          books: res.data.items,
-          pagination: { page: res.data.page, total: res.data.total }
-        })
-      })
-      .catch(err => console.error("Error fetching books:", err));
-    const rect = e.currentTarget.getBoundingClientRect()
+    // Just open the modal with raw category data — BookFlip fetches its own books
     closingRef.current = false
+    setSelectedCategory({...cat})
+    const rect = e.currentTarget.getBoundingClientRect()
     setFromTransform(getCardTransform(rect))
     setIsOpen(false)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => setIsOpen(true))
     })
   }, [])
-
-  const fetchPage = useCallback(async (pageNum, q = '') => {
-    if (!selectedCategory) return null;
-    const res = await getBooks({ categoryId: selectedCategory.id, page: pageNum, limit: 5, q });
-    if (res.success) return res.data.items;
-    return null;
-  }, [selectedCategory])
 
   const closeModal = useCallback(() => {
     if (!selectedCategory || closingRef.current) return
@@ -83,6 +81,10 @@ function Home() {
   // Close on Escape
   useEffect(() => {
     loadCategory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (!selectedCategory) return
     const onKey = (e) => e.key === 'Escape' && closeModal()
     window.addEventListener('keydown', onKey)
@@ -91,7 +93,17 @@ function Home() {
 
   return (
     <div className="max-w-[700px] w-[700px] min-w-[340px] h-[95%] overflow-auto mx-auto animate-slideUp">
-      {category.length > 0 ? (
+      {/* Loading state */}
+      {loading && category.length === 0 ? (
+        <CategoryLoader />
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center gap-4 w-full py-12">
+          <p className="text-red-500 text-sm">{error}</p>
+          <button onClick={loadCategory} className="clay-btn-primary">
+            Retry
+          </button>
+        </div>
+      ) : category.length > 0 ? (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
           {category.map((book) => (
             <div
@@ -146,7 +158,7 @@ function Home() {
           >
             <X size={20} />
           </button>
-          <BookFlip category={selectedCategory} onFetchPage={fetchPage} />
+          <BookFlip category={selectedCategory} />
         </div>
       )}
     </div>
